@@ -43,10 +43,13 @@ const searchIds = createSlice({
     resetSearchIds: () => [],
   },
   extraReducers: builder => {
-    builder.addCase(searchRepositories.fulfilled, (state, action) => [
-      ...state,
-      ...action.payload?.result.items,
-    ]);
+    builder.addCase(searchRepositories.fulfilled, (state, action) => {
+      action.payload?.result.items.forEach((repoName: string) => {
+        if (!state.includes(repoName)) {
+          state.push(repoName);
+        }
+      });
+    });
   },
 });
 

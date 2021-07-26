@@ -22,9 +22,13 @@ import { RootState } from '../redux/store';
 import { getData } from '../utils/storage';
 import { BOOKMARK_KEY } from '../constants';
 import { resetSearchIds, setBookmark } from '../redux/slice';
+import { ListFooterComponent } from './layout/ListFooter';
 
 export const SearchRepo = () => {
   const [isModalVisible, setIsModalVisible] = useState(false);
+  const [searchText, setSearchText] = useState('');
+  const [page, setPage] = useState(1);
+  const [isBottomLoading, setisBottomLoading] = useState(false);
 
   const repositories = useSelector((store: RootState) => store.repositories);
   const bookmarks = useSelector((store: RootState) => store.bookmarks);
@@ -57,6 +61,20 @@ export const SearchRepo = () => {
   }) => {
     await dispatch(resetSearchIds());
     dispatch(searchRepositories({ searchText: nativeEvent.text, page: 1 }));
+
+    setSearchText(nativeEvent.text);
+    setPage(prevPage => prevPage + 1);
+  };
+
+  const getMoreRepositories = async () => {
+    if (searchIds.length % 30 === 0) {
+      setisBottomLoading(true);
+
+      await dispatch(searchRepositories({ searchText, page }));
+      setPage(prevPage => prevPage + 1);
+
+      setisBottomLoading(false);
+    }
   };
 
   const toggleBookmark = (repo: string) => {
@@ -112,8 +130,13 @@ export const SearchRepo = () => {
         data={searchIds}
         renderItem={renderItem}
         keyExtractor={keyExtractor}
-        ItemSeparatorComponent={ItemSeparatorComponent}
         showsVerticalScrollIndicator={false}
+        onEndReached={getMoreRepositories}
+        onEndReachedThreshold={0}
+        ItemSeparatorComponent={ItemSeparatorComponent}
+        ListFooterComponent={
+          <ListFooterComponent isBottomLoading={isBottomLoading} />
+        }
       />
 
       <Modal isVisible={isModalVisible} style={styles.modalContainer}>
@@ -161,6 +184,7 @@ const styles = StyleSheet.create({
     fontSize: 16,
     fontWeight: 'bold',
     marginBottom: 6,
+    marginRight: 24,
   },
   starButton: {
     position: 'absolute',
