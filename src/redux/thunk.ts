@@ -1,8 +1,10 @@
 import { createAsyncThunk } from '@reduxjs/toolkit';
 import Config from 'react-native-config';
+import { normalize } from 'normalizr';
 
 import { setData } from '../utils/storage';
 import { BOOKMARK_KEY } from '../constants';
+import { repositoryEntity } from './schemas';
 
 export const handleBookmark = createAsyncThunk(
   'bookmark/toggle',
@@ -36,6 +38,25 @@ export const getBookmarkInfo = createAsyncThunk(
       const repoData = await res.json();
 
       return repoData;
+    } catch {}
+  }
+);
+
+export const searchRepositories = createAsyncThunk(
+  'repositories/search',
+  async (arg: { searchText: string; page: number }) => {
+    const { searchText, page } = arg;
+    try {
+      const res = await fetch(
+        `${Config.GITHUB_API}/search/repositories?q=${searchText}&page=${page}`
+      );
+
+      const data = await res.json();
+
+      const repositorySchema = { items: [repositoryEntity] };
+      const repositories = normalize(data, repositorySchema);
+
+      return repositories;
     } catch {}
   }
 );

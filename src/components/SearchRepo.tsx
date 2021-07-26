@@ -10,21 +10,26 @@ import {
   View,
 } from 'react-native';
 import { useDispatch, useSelector } from 'react-redux';
-import Config from 'react-native-config';
 import Icon from 'react-native-vector-icons/Ionicons';
 import Modal from 'react-native-modal';
 
-import { getBookmarkInfo, handleBookmark } from '../redux/thunk';
+import {
+  getBookmarkInfo,
+  handleBookmark,
+  searchRepositories,
+} from '../redux/thunk';
 import { RootState } from '../redux/store';
 import { getData } from '../utils/storage';
 import { BOOKMARK_KEY } from '../constants';
-import { setBookmark } from '../redux/slice';
+import { resetSearchIds, setBookmark } from '../redux/slice';
 
 export const SearchRepo = () => {
-  const [result, setResult] = useState([]);
   const [isModalVisible, setIsModalVisible] = useState(false);
 
+  const repositories = useSelector((store: RootState) => store.repositories);
   const bookmarks = useSelector((store: RootState) => store.bookmarks);
+  const searchIds = useSelector((store: RootState) => store.searchIds);
+
   const dispatch = useDispatch();
 
   useEffect(() => {
@@ -45,17 +50,13 @@ export const SearchRepo = () => {
     setInitBookmark();
   }, []);
 
-  const searchRepository = async ({
+  const searchRepo = async ({
     nativeEvent,
   }: {
     nativeEvent: { text: string };
   }) => {
-    const res = await fetch(
-      `${Config.GITHUB_API}/search/repositories?q=${nativeEvent.text}`
-    );
-    const data = await res.json();
-
-    setResult(data.items);
+    await dispatch(resetSearchIds());
+    dispatch(searchRepositories({ searchText: nativeEvent.text, page: 1 }));
   };
 
   const toggleBookmark = (repo: string) => {
@@ -67,7 +68,7 @@ export const SearchRepo = () => {
   };
 
   const renderItem = ({ item }: { item: any }) => {
-    const { full_name, description } = item;
+    const { full_name, description } = repositories[item];
 
     return (
       <>
@@ -88,7 +89,7 @@ export const SearchRepo = () => {
     );
   };
 
-  const keyExtractor = (item: any) => item.id;
+  const keyExtractor = (item: any) => item;
 
   const ItemSeparatorComponent = () => {
     return <View style={styles.divideLine} />;
@@ -102,13 +103,13 @@ export const SearchRepo = () => {
           style={styles.textInput}
           placeholder="원하는 저장소를 검색해보세요"
           returnKeyType="search"
-          onSubmitEditing={searchRepository}
+          onSubmitEditing={searchRepo}
           autoCorrect={false}
           autoCapitalize="none"
         />
       </View>
       <FlatList
-        data={result}
+        data={searchIds}
         renderItem={renderItem}
         keyExtractor={keyExtractor}
         ItemSeparatorComponent={ItemSeparatorComponent}
