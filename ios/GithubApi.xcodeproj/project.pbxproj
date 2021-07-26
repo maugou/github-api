@@ -114,7 +114,6 @@
 				66A6A9D71A57159336DFC98B /* Pods-GithubApi-GithubApiTests.debug.xcconfig */,
 				48EE694D464AED8434611C1E /* Pods-GithubApi-GithubApiTests.release.xcconfig */,
 			);
-			name = Pods;
 			path = Pods;
 			sourceTree = "<group>";
 		};
