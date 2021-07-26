@@ -1,4 +1,5 @@
 import React from 'react';
+import { StyleSheet, Text } from 'react-native';
 import { NavigationContainer } from '@react-navigation/native';
 import { createStackNavigator } from '@react-navigation/stack';
 import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
@@ -45,8 +46,33 @@ export const Root = () => {
           component={BottomTabRoute}
           options={{ headerShown: false }}
         />
-        <Stack.Screen name="RepoDetail" component={RepoDetail} />
+        <Stack.Screen
+          name="RepoDetail"
+          component={RepoDetail}
+          options={{
+            headerTitle: () => <Text style={styles.header}>GitHub</Text>,
+            headerBackTitleVisible: false,
+            headerBackImage: () => (
+              <Icon
+                name="arrow-back-outline"
+                size={26}
+                color="rgb(70, 70, 70)"
+                style={styles.backArrow}
+              />
+            ),
+          }}
+        />
       </Stack.Navigator>
     </NavigationContainer>
   );
 };
+
+const styles = StyleSheet.create({
+  header: {
+    fontSize: 20,
+    fontWeight: 'bold',
+  },
+  backArrow: {
+    paddingHorizontal: 14,
+  },
+});

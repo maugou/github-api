@@ -10,22 +10,33 @@ import {
   View,
 } from 'react-native';
 import { useDispatch, useSelector } from 'react-redux';
-import Config from 'react-native-config';
 import Icon from 'react-native-vector-icons/Ionicons';
 import Modal from 'react-native-modal';
 
-import { getBookmarkInfo, handleBookmark } from '../redux/thunk';
+import {
+  getBookmarkInfo,
+  handleBookmark,
+  searchRepositories,
+} from '../redux/thunk';
 import { RootState } from '../redux/store';
 import { getData } from '../utils/storage';
 import { BOOKMARK_KEY } from '../constants';
-import { setBookmark } from '../redux/slice';
+import { resetSearchIds, setBookmark } from '../redux/slice';
+import { ListFooterComponent } from './layout/ListFooter';
+import { useNavigation } from '@react-navigation/native';
 
 export const SearchRepo = () => {
-  const [result, setResult] = useState([]);
   const [isModalVisible, setIsModalVisible] = useState(false);
+  const [searchText, setSearchText] = useState('');
+  const [page, setPage] = useState(1);
+  const [isBottomLoading, setisBottomLoading] = useState(false);
 
+  const repositories = useSelector((store: RootState) => store.repositories);
   const bookmarks = useSelector((store: RootState) => store.bookmarks);
+  const searchIds = useSelector((store: RootState) => store.searchIds);
+
   const dispatch = useDispatch();
+  const navigation = useNavigation();
 
   useEffect(() => {
     const setInitBookmark = async () => {
@@ -45,17 +56,27 @@ export const SearchRepo = () => {
     setInitBookmark();
   }, []);
 
-  const searchRepository = async ({
+  const searchRepo = async ({
     nativeEvent,
   }: {
     nativeEvent: { text: string };
   }) => {
-    const res = await fetch(
-      `${Config.GITHUB_API}/search/repositories?q=${nativeEvent.text}`
-    );
-    const data = await res.json();
+    await dispatch(resetSearchIds());
+    dispatch(searchRepositories({ searchText: nativeEvent.text, page: 1 }));
 
-    setResult(data.items);
+    setSearchText(nativeEvent.text);
+    setPage(prevPage => prevPage + 1);
+  };
+
+  const getMoreRepositories = async () => {
+    if (searchIds.length % 30 === 0) {
+      setisBottomLoading(true);
+
+      await dispatch(searchRepositories({ searchText, page }));
+      setPage(prevPage => prevPage + 1);
+
+      setisBottomLoading(false);
+    }
   };
 
   const toggleBookmark = (repo: string) => {
@@ -67,11 +88,13 @@ export const SearchRepo = () => {
   };
 
   const renderItem = ({ item }: { item: any }) => {
-    const { full_name, description } = item;
+    const { full_name, description, html_url } = repositories[item];
 
     return (
       <>
-        <TouchableOpacity style={styles.resultBox}>
+        <TouchableOpacity
+          style={styles.resultBox}
+          onPress={() => navigation.navigate('RepoDetail', { uri: html_url })}>
           <Text style={styles.fullName}>{full_name}</Text>
           <Text>{description}</Text>
         </TouchableOpacity>
@@ -88,7 +111,7 @@ export const SearchRepo = () => {
     );
   };
 
-  const keyExtractor = (item: any) => item.id;
+  const keyExtractor = (item: any) => item;
 
   const ItemSeparatorComponent = () => {
     return <View style={styles.divideLine} />;
@@ -102,17 +125,22 @@ export const SearchRepo = () => {
           style={styles.textInput}
           placeholder="원하는 저장소를 검색해보세요"
           returnKeyType="search"
-          onSubmitEditing={searchRepository}
+          onSubmitEditing={searchRepo}
           autoCorrect={false}
           autoCapitalize="none"
         />
       </View>
       <FlatList
-        data={result}
+        data={searchIds}
         renderItem={renderItem}
         keyExtractor={keyExtractor}
-        ItemSeparatorComponent={ItemSeparatorComponent}
         showsVerticalScrollIndicator={false}
+        onEndReached={getMoreRepositories}
+        onEndReachedThreshold={0}
+        ItemSeparatorComponent={ItemSeparatorComponent}
+        ListFooterComponent={
+          <ListFooterComponent isBottomLoading={isBottomLoading} />
+        }
       />
 
       <Modal isVisible={isModalVisible} style={styles.modalContainer}>
@@ -160,6 +188,7 @@ const styles = StyleSheet.create({
     fontSize: 16,
     fontWeight: 'bold',
     marginBottom: 6,
+    marginRight: 24,
   },
   starButton: {
     position: 'absolute',
