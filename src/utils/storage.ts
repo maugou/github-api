@@ -5,5 +5,10 @@ export const setData = async (key: string, value: any) => {
 };
 
 export const getData = async (key: string) => {
-  await AsyncStorage.getItem(key);
+  try {
+    const res = await AsyncStorage.getItem(key);
+    const bookmark = res ? JSON.parse(res) : [];
+
+    return bookmark;
+  } catch {}
 };

@@ -1,29 +1,41 @@
 import { createAsyncThunk } from '@reduxjs/toolkit';
+import Config from 'react-native-config';
 
 import { setData } from '../utils/storage';
+import { BOOKMARK_KEY } from '../constants';
 
-const BOOKMARK_KEY = 'bookmark';
-
-export const setBookmark = createAsyncThunk(
-  'bookmark',
+export const handleBookmark = createAsyncThunk(
+  'bookmark/toggle',
   async (repoName: string, { getState }: any) => {
-    const { bookmarks } = getState();
-    const index = bookmarks.findIndex(
-      (bookmark: string) => bookmark === repoName
-    );
-
-    let newBookmarks = [...bookmarks];
-
-    if (index === -1) {
-      newBookmarks.push(repoName);
-    } else {
-      newBookmarks.splice(index, 1);
-    }
-
     try {
-      await setData(BOOKMARK_KEY, JSON.stringify(newBookmarks));
-    } catch {}
+      const { bookmarks } = getState();
+      const index = bookmarks.findIndex(
+        (bookmark: string) => bookmark === repoName
+      );
 
-    return newBookmarks;
+      let newBookmarks = [...bookmarks];
+
+      if (index === -1) {
+        newBookmarks.push(repoName);
+      } else {
+        newBookmarks.splice(index, 1);
+      }
+
+      await setData(BOOKMARK_KEY, JSON.stringify(newBookmarks));
+
+      return newBookmarks;
+    } catch {}
+  }
+);
+
+export const getBookmarkInfo = createAsyncThunk(
+  'repository/get',
+  async (repoName: string) => {
+    try {
+      const res = await fetch(`${Config.GITHUB_API}/repos/${repoName}`);
+      const repoData = await res.json();
+
+      return repoData;
+    } catch {}
   }
 );

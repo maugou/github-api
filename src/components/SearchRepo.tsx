@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import {
   FlatList,
   SafeAreaView,
@@ -12,14 +12,35 @@ import { useDispatch, useSelector } from 'react-redux';
 import Config from 'react-native-config';
 import Icon from 'react-native-vector-icons/Ionicons';
 
-import { setBookmark } from '../redux/thunk';
+import { getBookmarkInfo, handleBookmark } from '../redux/thunk';
 import { RootState } from '../redux/store';
+import { getData } from '../utils/storage';
+import { BOOKMARK_KEY } from '../constants';
+import { setBookmark } from '../redux/slice';
 
 export const SearchRepo = () => {
   const [result, setResult] = useState([]);
 
   const bookmarks = useSelector((store: RootState) => store.bookmarks);
   const dispatch = useDispatch();
+
+  useEffect(() => {
+    const setInitBookmark = async () => {
+      const storageData = await getData(BOOKMARK_KEY);
+
+      if (storageData.length !== 0) {
+        await Promise.all(
+          storageData.map((repoName: string) => {
+            dispatch(getBookmarkInfo(repoName));
+          })
+        );
+
+        dispatch(setBookmark(storageData));
+      }
+    };
+
+    setInitBookmark();
+  }, []);
 
   const searchRepository = async ({
     nativeEvent,
@@ -36,7 +57,7 @@ export const SearchRepo = () => {
 
   const toggleBookmark = (repo: string) => {
     if (bookmarks.length < 4 || bookmarks.includes(repo)) {
-      dispatch(setBookmark(repo));
+      dispatch(handleBookmark(repo));
     }
   };
 
