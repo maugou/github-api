@@ -1,5 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import {
+  Dimensions,
   FlatList,
   SafeAreaView,
   StyleSheet,
@@ -11,6 +12,7 @@ import {
 import { useDispatch, useSelector } from 'react-redux';
 import Config from 'react-native-config';
 import Icon from 'react-native-vector-icons/Ionicons';
+import Modal from 'react-native-modal';
 
 import { getBookmarkInfo, handleBookmark } from '../redux/thunk';
 import { RootState } from '../redux/store';
@@ -20,6 +22,7 @@ import { setBookmark } from '../redux/slice';
 
 export const SearchRepo = () => {
   const [result, setResult] = useState([]);
+  const [isModalVisible, setIsModalVisible] = useState(false);
 
   const bookmarks = useSelector((store: RootState) => store.bookmarks);
   const dispatch = useDispatch();
@@ -58,6 +61,8 @@ export const SearchRepo = () => {
   const toggleBookmark = (repo: string) => {
     if (bookmarks.length < 4 || bookmarks.includes(repo)) {
       dispatch(handleBookmark(repo));
+    } else {
+      setIsModalVisible(true);
     }
   };
 
@@ -109,9 +114,22 @@ export const SearchRepo = () => {
         ItemSeparatorComponent={ItemSeparatorComponent}
         showsVerticalScrollIndicator={false}
       />
+
+      <Modal isVisible={isModalVisible} style={styles.modalContainer}>
+        <View style={styles.modalTextBox}>
+          <Text style={styles.modalText}>관심 등록은 4개가 최대입니다.</Text>
+          <TouchableOpacity
+            style={styles.modalButton}
+            onPress={() => setIsModalVisible(false)}>
+            <Text>확인</Text>
+          </TouchableOpacity>
+        </View>
+      </Modal>
     </SafeAreaView>
   );
 };
+
+const deviceWidth = Dimensions.get('window').width;
 
 const styles = StyleSheet.create({
   container: {
@@ -153,5 +171,29 @@ const styles = StyleSheet.create({
     borderWidth: 0.5,
     borderColor: 'rgb(210, 210, 210)',
     marginHorizontal: 10,
+  },
+  modalContainer: {
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  modalTextBox: {
+    width: deviceWidth / 1.6,
+    height: 160,
+    backgroundColor: 'rgb(240, 240, 240)',
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  modalText: {
+    flex: 1,
+    fontSize: 16,
+    paddingTop: 40,
+  },
+  modalButton: {
+    width: deviceWidth / 1.6,
+    padding: 16,
+    justifyContent: 'center',
+    alignItems: 'center',
+    borderTopWidth: 0.3,
+    borderColor: 'rgb(180, 180, 180)',
   },
 });
