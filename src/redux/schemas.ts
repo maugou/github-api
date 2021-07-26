@@ -7,3 +7,11 @@ export const repositoryEntity = new schema.Entity(
     idAttribute: 'full_name',
   }
 );
+
+export const issueEntity = new schema.Entity(
+  'issues',
+  {},
+  {
+    idAttribute: 'id',
+  }
+);

@@ -8,6 +8,7 @@ import Icon from 'react-native-vector-icons/Ionicons';
 import { SearchRepo } from '../components/SearchRepo';
 import { RepoDetail } from '../components/RepoDetail';
 import { RepoBookmark } from '../components/RepoBookmark';
+import { Issues } from '../components/Issues';
 
 const Stack = createStackNavigator();
 const BottomTab = createBottomTabNavigator();
@@ -21,6 +22,15 @@ const BottomTabRoute = () => {
         options={{
           tabBarIcon: ({ color, size }) => (
             <Icon name="search-outline" color={color} size={size} />
+          ),
+        }}
+      />
+      <BottomTab.Screen
+        name="이슈"
+        component={Issues}
+        options={{
+          tabBarIcon: ({ color, size }) => (
+            <Icon name="reader-outline" color={color} size={size} />
           ),
         }}
       />
