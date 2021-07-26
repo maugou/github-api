@@ -23,6 +23,7 @@ import { getData } from '../utils/storage';
 import { BOOKMARK_KEY } from '../constants';
 import { resetSearchIds, setBookmark } from '../redux/slice';
 import { ListFooterComponent } from './layout/ListFooter';
+import { useNavigation } from '@react-navigation/native';
 
 export const SearchRepo = () => {
   const [isModalVisible, setIsModalVisible] = useState(false);
@@ -35,6 +36,7 @@ export const SearchRepo = () => {
   const searchIds = useSelector((store: RootState) => store.searchIds);
 
   const dispatch = useDispatch();
+  const navigation = useNavigation();
 
   useEffect(() => {
     const setInitBookmark = async () => {
@@ -86,11 +88,13 @@ export const SearchRepo = () => {
   };
 
   const renderItem = ({ item }: { item: any }) => {
-    const { full_name, description } = repositories[item];
+    const { full_name, description, html_url } = repositories[item];
 
     return (
       <>
-        <TouchableOpacity style={styles.resultBox}>
+        <TouchableOpacity
+          style={styles.resultBox}
+          onPress={() => navigation.navigate('RepoDetail', { uri: html_url })}>
           <Text style={styles.fullName}>{full_name}</Text>
           <Text>{description}</Text>
         </TouchableOpacity>

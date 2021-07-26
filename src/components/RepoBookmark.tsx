@@ -9,6 +9,7 @@ import {
 } from 'react-native';
 import Icon from 'react-native-vector-icons/Ionicons';
 import { useDispatch, useSelector } from 'react-redux';
+import { useNavigation } from '@react-navigation/native';
 
 import { RootState } from '../redux/store';
 import { handleBookmark } from '../redux/thunk';
@@ -16,6 +17,8 @@ import { handleBookmark } from '../redux/thunk';
 export const RepoBookmark = () => {
   const bookmarks = useSelector((store: RootState) => store.bookmarks);
   const repositories = useSelector((store: RootState) => store.repositories);
+
+  const navigation = useNavigation();
   const dispatch = useDispatch();
 
   const toggleBookmark = (repo: string) => {
@@ -25,11 +28,13 @@ export const RepoBookmark = () => {
   };
 
   const renderItem = ({ item }: { item: string }) => {
-    const { full_name, description } = repositories[item];
+    const { full_name, description, html_url } = repositories[item];
 
     return (
       <>
-        <TouchableOpacity style={styles.resultBox}>
+        <TouchableOpacity
+          style={styles.resultBox}
+          onPress={() => navigation.navigate('RepoDetail', { uri: html_url })}>
           <Text style={styles.fullName}>{full_name}</Text>
           <Text>{description}</Text>
         </TouchableOpacity>
