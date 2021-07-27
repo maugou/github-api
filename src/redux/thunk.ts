@@ -63,14 +63,21 @@ export const searchRepositories = createAsyncThunk(
 
 export const getIssues = createAsyncThunk(
   'issues/get',
-  async (repoName: string) => {
+  async (repoName: string, { rejectWithValue }) => {
     try {
       const res = await fetch(
-        `${Config.GITHUB_API}/repos/${repoName}/issues?per_page=10`
+        `${Config.GITHUB_API}/repos/${repoName}/issues?state=all&per_page=10`
       );
       const data = await res.json();
 
-      const issuesData = normalize(data, [issueEntity]);
+      if (data.length === 0) {
+        throw 'getIssues: empty';
+      }
+
+      const issuesData = normalize(
+        data.filter((value: any) => value.html_url.includes('issues')),
+        [issueEntity]
+      );
 
       let issues: any = {};
 
@@ -82,6 +89,8 @@ export const getIssues = createAsyncThunk(
       });
 
       return { ...issues, result: issuesData.result };
-    } catch {}
+    } catch {
+      return rejectWithValue({});
+    }
   }
 );

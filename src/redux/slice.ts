@@ -32,10 +32,17 @@ const issues = createSlice({
   initialState: issueList,
   reducers: {},
   extraReducers: builder => {
-    builder.addCase(getIssues.fulfilled, (state, action) => ({
+    builder.addCase(getIssues.rejected, (state, action) => ({
       ...state,
-      ...action.payload,
     }));
+    builder.addCase(getIssues.fulfilled, (state, action) => {
+      const { result, ...issuesInfo } = action.payload;
+
+      return {
+        ...state,
+        ...issuesInfo,
+      };
+    });
   },
 });
 
@@ -73,20 +80,29 @@ const searchIds = createSlice({
   },
 });
 
+type issueIdState = number[];
+const issueIdList: issueIdState = [];
+
 const issueIds = createSlice({
   name: 'issueIds',
-  initialState: initList,
-  reducers: {},
+  initialState: issueIdList,
+  reducers: {
+    resetIssueIds: () => [],
+  },
   extraReducers: builder => {
-    builder.addCase(getIssues.fulfilled, (state, action) => [
-      ...state,
-      ...action.payload?.result,
-    ]);
+    builder.addCase(getIssues.fulfilled, (state, action) => {
+      action.payload?.result.forEach((id: number) => {
+        if (!state.includes(id)) {
+          state.push(id);
+        }
+      });
+    });
   },
 });
 
 export const { setBookmark } = bookmarks.actions;
 export const { resetSearchIds } = searchIds.actions;
+export const { resetIssueIds } = issueIds.actions;
 
 export const rootReducer = combineReducers({
   repositories: repositories.reducer,

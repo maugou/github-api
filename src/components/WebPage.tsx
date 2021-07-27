@@ -4,7 +4,7 @@ import { useRoute } from '@react-navigation/native';
 
 import { LoadingView } from './layout/LoadingView';
 
-export const RepoDetail = () => {
+export const WebPage = () => {
   const [isLoading, setIsLoading] = useState(true);
 
   const route = useRoute();

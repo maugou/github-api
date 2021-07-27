@@ -6,7 +6,7 @@ import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
 import Icon from 'react-native-vector-icons/Ionicons';
 
 import { SearchRepo } from '../components/SearchRepo';
-import { RepoDetail } from '../components/RepoDetail';
+import { WebPage } from '../components/WebPage';
 import { RepoBookmark } from '../components/RepoBookmark';
 import { Issues } from '../components/Issues';
 
@@ -57,8 +57,8 @@ export const Root = () => {
           options={{ headerShown: false }}
         />
         <Stack.Screen
-          name="RepoDetail"
-          component={RepoDetail}
+          name="WebPage"
+          component={WebPage}
           options={{
             headerTitle: () => <Text style={styles.header}>GitHub</Text>,
             headerBackTitleVisible: false,
