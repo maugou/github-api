@@ -1,8 +1,10 @@
 import { combineReducers, createSlice } from '@reduxjs/toolkit';
-import { getBookmarkInfo, handleBookmark, searchRepositories } from './thunk';
-
-type listState = string[];
-const initList: listState = [];
+import {
+  getBookmarkInfo,
+  getIssues,
+  handleBookmark,
+  searchRepositories,
+} from './thunk';
 
 type RepoState = { [k: string]: any };
 const initRepoInfo: RepoState = {};
@@ -21,6 +23,31 @@ const repositories = createSlice({
     }));
   },
 });
+
+type issueState = { [k: number]: any };
+const issueList: issueState = {};
+
+const issues = createSlice({
+  name: 'issues',
+  initialState: issueList,
+  reducers: {},
+  extraReducers: builder => {
+    builder.addCase(getIssues.rejected, (state, action) => ({
+      ...state,
+    }));
+    builder.addCase(getIssues.fulfilled, (state, action) => {
+      const { result, ...issuesInfo } = action.payload;
+
+      return {
+        ...state,
+        ...issuesInfo,
+      };
+    });
+  },
+});
+
+type listState = string[];
+const initList: listState = [];
 
 const bookmarks = createSlice({
   name: 'bookmarks',
@@ -53,11 +80,34 @@ const searchIds = createSlice({
   },
 });
 
+type issueIdState = number[];
+const issueIdList: issueIdState = [];
+
+const issueIds = createSlice({
+  name: 'issueIds',
+  initialState: issueIdList,
+  reducers: {
+    resetIssueIds: () => [],
+  },
+  extraReducers: builder => {
+    builder.addCase(getIssues.fulfilled, (state, action) => {
+      action.payload?.result.forEach((id: number) => {
+        if (!state.includes(id)) {
+          state.push(id);
+        }
+      });
+    });
+  },
+});
+
 export const { setBookmark } = bookmarks.actions;
 export const { resetSearchIds } = searchIds.actions;
+export const { resetIssueIds } = issueIds.actions;
 
 export const rootReducer = combineReducers({
   repositories: repositories.reducer,
+  issues: issues.reducer,
   bookmarks: bookmarks.reducer,
   searchIds: searchIds.reducer,
+  issueIds: issueIds.reducer,
 });

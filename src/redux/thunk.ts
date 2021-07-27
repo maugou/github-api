@@ -4,7 +4,7 @@ import { normalize } from 'normalizr';
 
 import { setData } from '../utils/storage';
 import { BOOKMARK_KEY } from '../constants';
-import { repositoryEntity } from './schemas';
+import { issueEntity, repositoryEntity } from './schemas';
 
 export const handleBookmark = createAsyncThunk(
   'bookmark/toggle',
@@ -58,5 +58,41 @@ export const searchRepositories = createAsyncThunk(
 
       return repositories;
     } catch {}
+  }
+);
+
+export const getIssues = createAsyncThunk(
+  'issues/get',
+  async (arg: { repoName: string; page: number }, { rejectWithValue }) => {
+    const { repoName, page } = arg;
+
+    try {
+      const res = await fetch(
+        `${Config.GITHUB_API}/repos/${repoName}/issues?state=all&per_page=10&page=${page}`
+      );
+      const data = await res.json();
+
+      if (data.length === 0) {
+        throw 'getIssues: empty';
+      }
+
+      const issuesData = normalize(
+        data.filter((value: any) => value.html_url.includes('issues')),
+        [issueEntity]
+      );
+
+      let issues: any = {};
+
+      issuesData.result.forEach((id: number) => {
+        issues[id] = {
+          ...issuesData.entities.issues![id],
+          full_name: repoName,
+        };
+      });
+
+      return { ...issues, result: issuesData.result };
+    } catch {
+      return rejectWithValue({});
+    }
   }
 );

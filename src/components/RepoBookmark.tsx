@@ -34,7 +34,7 @@ export const RepoBookmark = () => {
       <>
         <TouchableOpacity
           style={styles.resultBox}
-          onPress={() => navigation.navigate('RepoDetail', { uri: html_url })}>
+          onPress={() => navigation.navigate('WebPage', { uri: html_url })}>
           <Text style={styles.fullName}>{full_name}</Text>
           <Text>{description}</Text>
         </TouchableOpacity>
