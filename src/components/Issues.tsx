@@ -1,4 +1,4 @@
-import React, { useEffect } from 'react';
+import React, { useEffect, useState } from 'react';
 import {
   FlatList,
   SafeAreaView,
@@ -13,8 +13,12 @@ import { useNavigation } from '@react-navigation/native';
 import { RootState } from '../redux/store';
 import { getIssues } from '../redux/thunk';
 import { resetIssueIds } from '../redux/slice';
+import { ListFooterComponent } from './layout/ListFooter';
 
 export const Issues = () => {
+  const [page, setPage] = useState(1);
+  const [isBottomLoading, setisBottomLoading] = useState(false);
+
   const issueIds = useSelector((store: RootState) => store.issueIds);
   const issues = useSelector((store: RootState) => store.issues);
   const bookmarks = useSelector((store: RootState) => store.bookmarks);
@@ -23,11 +27,28 @@ export const Issues = () => {
   const dispatch = useDispatch();
 
   useEffect(() => {
+    dispatch(resetIssueIds());
+
     bookmarks.forEach(repoName => {
-      dispatch(resetIssueIds());
-      dispatch(getIssues(repoName));
+      dispatch(getIssues({ repoName, page: 1 }));
     });
+
+    setPage(prevPage => prevPage + 1);
   }, [bookmarks, dispatch]);
+
+  const getMoreIssues = async () => {
+    setisBottomLoading(true);
+
+    await Promise.all(
+      bookmarks.map(repoName => {
+        dispatch(getIssues({ repoName, page }));
+      })
+    );
+
+    setPage(prevPage => prevPage + 1);
+
+    setisBottomLoading(false);
+  };
 
   const renderItem = ({ item }: { item: number }) => {
     const { full_name, title, html_url, state } = issues[item];
@@ -69,6 +90,11 @@ export const Issues = () => {
         keyExtractor={keyExtractor}
         ItemSeparatorComponent={ItemSeparatorComponent}
         showsVerticalScrollIndicator={false}
+        onEndReached={getMoreIssues}
+        onEndReachedThreshold={0}
+        ListFooterComponent={
+          <ListFooterComponent isBottomLoading={isBottomLoading} />
+        }
       />
     </SafeAreaView>
   );

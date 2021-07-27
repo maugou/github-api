@@ -63,10 +63,12 @@ export const searchRepositories = createAsyncThunk(
 
 export const getIssues = createAsyncThunk(
   'issues/get',
-  async (repoName: string, { rejectWithValue }) => {
+  async (arg: { repoName: string; page: number }, { rejectWithValue }) => {
+    const { repoName, page } = arg;
+
     try {
       const res = await fetch(
-        `${Config.GITHUB_API}/repos/${repoName}/issues?state=all&per_page=10`
+        `${Config.GITHUB_API}/repos/${repoName}/issues?state=all&per_page=10&page=${page}`
       );
       const data = await res.json();
 
