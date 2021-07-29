@@ -100,6 +100,31 @@ const issueIds = createSlice({
   },
 });
 
+type Pagination = {
+  searchTotalCount?: number;
+  endRepos: string[];
+};
+const initPageState: Pagination = { endRepos: [] };
+
+const pagination = createSlice({
+  name: 'pagination',
+  initialState: initPageState,
+  reducers: {},
+  extraReducers: builder => {
+    builder.addCase(searchRepositories.fulfilled, (state, action) => {
+      state.searchTotalCount = action.payload?.result.total_count;
+    });
+    builder.addCase(getIssues.rejected, (state, action) => {
+      state.endRepos?.push(action.meta.arg.repoName);
+    });
+    builder.addCase(handleBookmark.fulfilled, (state, action) => {
+      state.endRepos = state.endRepos.filter(repoName =>
+        action.payload!.includes(repoName)
+      );
+    });
+  },
+});
+
 export const { setBookmark } = bookmarks.actions;
 export const { resetSearchIds } = searchIds.actions;
 export const { resetIssueIds } = issueIds.actions;
@@ -110,4 +135,5 @@ export const rootReducer = combineReducers({
   bookmarks: bookmarks.reducer,
   searchIds: searchIds.reducer,
   issueIds: issueIds.reducer,
+  pagination: pagination.reducer,
 });

@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useCallback } from 'react';
 import {
   FlatList,
   SafeAreaView,
@@ -21,12 +21,6 @@ export const RepoBookmark = () => {
   const navigation = useNavigation();
   const dispatch = useDispatch();
 
-  const toggleBookmark = (repo: string) => {
-    if (bookmarks.length < 4 || bookmarks.includes(repo)) {
-      dispatch(handleBookmark(repo));
-    }
-  };
-
   const renderItem = ({ item }: { item: string }) => {
     const { full_name, description, html_url } = repositories[item];
 
@@ -40,7 +34,11 @@ export const RepoBookmark = () => {
         </TouchableOpacity>
         <TouchableOpacity
           style={styles.starButton}
-          onPress={() => toggleBookmark(full_name)}>
+          onPress={() => {
+            if (bookmarks.length < 4 || bookmarks.includes(full_name)) {
+              dispatch(handleBookmark(full_name));
+            }
+          }}>
           {bookmarks.includes(full_name) ? (
             <Icon name="star" size={20} />
           ) : (
@@ -51,7 +49,7 @@ export const RepoBookmark = () => {
     );
   };
 
-  const keyExtractor = (item: any) => item;
+  const keyExtractor = useCallback((item: any) => item, []);
 
   const ItemSeparatorComponent = () => {
     return <View style={styles.divideLine} />;

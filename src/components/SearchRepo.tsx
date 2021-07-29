@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react';
+import React, { useCallback, useEffect, useState } from 'react';
 import {
   Dimensions,
   FlatList,
@@ -12,6 +12,7 @@ import {
 import { useDispatch, useSelector } from 'react-redux';
 import Icon from 'react-native-vector-icons/Ionicons';
 import Modal from 'react-native-modal';
+import { useNavigation } from '@react-navigation/native';
 
 import {
   getBookmarkInfo,
@@ -23,7 +24,6 @@ import { getData } from '../utils/storage';
 import { BOOKMARK_KEY } from '../constants';
 import { resetSearchIds, setBookmark } from '../redux/slice';
 import { ListFooterComponent } from './layout/ListFooter';
-import { useNavigation } from '@react-navigation/native';
 
 export const SearchRepo = () => {
   const [isModalVisible, setIsModalVisible] = useState(false);
@@ -34,6 +34,9 @@ export const SearchRepo = () => {
   const repositories = useSelector((store: RootState) => store.repositories);
   const bookmarks = useSelector((store: RootState) => store.bookmarks);
   const searchIds = useSelector((store: RootState) => store.searchIds);
+  const searchTotalCount = useSelector(
+    (store: RootState) => store.pagination.searchTotalCount
+  );
 
   const dispatch = useDispatch();
   const navigation = useNavigation();
@@ -56,20 +59,19 @@ export const SearchRepo = () => {
     setInitBookmark();
   }, []);
 
-  const searchRepo = async ({
-    nativeEvent,
-  }: {
-    nativeEvent: { text: string };
-  }) => {
-    await dispatch(resetSearchIds());
-    dispatch(searchRepositories({ searchText: nativeEvent.text, page: 1 }));
+  const searchRepo = useCallback(
+    async ({ nativeEvent }: { nativeEvent: { text: string } }) => {
+      await dispatch(resetSearchIds());
+      dispatch(searchRepositories({ searchText: nativeEvent.text, page: 1 }));
 
-    setSearchText(nativeEvent.text);
-    setPage(prevPage => prevPage + 1);
-  };
+      setSearchText(nativeEvent.text);
+      setPage(prevPage => prevPage + 1);
+    },
+    [dispatch]
+  );
 
-  const getMoreRepositories = async () => {
-    if (searchIds.length % 30 === 0) {
+  const getMoreRepositories = useCallback(async () => {
+    if (searchTotalCount && searchIds.length < searchTotalCount) {
       setisBottomLoading(true);
 
       await dispatch(searchRepositories({ searchText, page }));
@@ -77,15 +79,7 @@ export const SearchRepo = () => {
 
       setisBottomLoading(false);
     }
-  };
-
-  const toggleBookmark = (repo: string) => {
-    if (bookmarks.length < 4 || bookmarks.includes(repo)) {
-      dispatch(handleBookmark(repo));
-    } else {
-      setIsModalVisible(true);
-    }
-  };
+  }, [dispatch, page, searchIds, searchTotalCount, searchText]);
 
   const renderItem = ({ item }: { item: any }) => {
     const { full_name, description, html_url } = repositories[item];
@@ -98,9 +92,16 @@ export const SearchRepo = () => {
           <Text style={styles.fullName}>{full_name}</Text>
           <Text>{description}</Text>
         </TouchableOpacity>
+
         <TouchableOpacity
           style={styles.starButton}
-          onPress={() => toggleBookmark(full_name)}>
+          onPress={() => {
+            if (bookmarks.length < 4 || bookmarks.includes(full_name)) {
+              dispatch(handleBookmark(full_name));
+            } else {
+              setIsModalVisible(true);
+            }
+          }}>
           {bookmarks.includes(full_name) ? (
             <Icon name="star" size={20} />
           ) : (
@@ -111,7 +112,7 @@ export const SearchRepo = () => {
     );
   };
 
-  const keyExtractor = (item: any) => item;
+  const keyExtractor = useCallback((item: any) => item, []);
 
   const ItemSeparatorComponent = () => {
     return <View style={styles.divideLine} />;
