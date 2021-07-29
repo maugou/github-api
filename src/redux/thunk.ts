@@ -15,7 +15,7 @@ export const handleBookmark = createAsyncThunk(
         (bookmark: string) => bookmark === repoName
       );
 
-      let newBookmarks = [...bookmarks];
+      let newBookmarks: string[] = [...bookmarks];
 
       if (index === -1) {
         newBookmarks.push(repoName);
@@ -68,7 +68,7 @@ export const getIssues = createAsyncThunk(
 
     try {
       const res = await fetch(
-        `${Config.GITHUB_API}/repos/${repoName}/issues?state=all&per_page=10&page=${page}`
+        `${Config.GITHUB_API}/repos/${repoName}/issues?state=all&page=${page}`
       );
       const data = await res.json();
 

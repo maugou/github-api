@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react';
+import React, { useCallback, useEffect, useState } from 'react';
 import {
   FlatList,
   SafeAreaView,
@@ -22,6 +22,7 @@ export const Issues = () => {
   const issueIds = useSelector((store: RootState) => store.issueIds);
   const issues = useSelector((store: RootState) => store.issues);
   const bookmarks = useSelector((store: RootState) => store.bookmarks);
+  const endRepos = useSelector((store: RootState) => store.pagination.endRepos);
 
   const navigation = useNavigation();
   const dispatch = useDispatch();
@@ -36,47 +37,56 @@ export const Issues = () => {
     setPage(prevPage => prevPage + 1);
   }, [bookmarks, dispatch]);
 
-  const getMoreIssues = async () => {
-    setisBottomLoading(true);
+  const getMoreIssues = useCallback(async () => {
+    if (bookmarks.length !== endRepos.length) {
+      setisBottomLoading(true);
 
-    await Promise.all(
-      bookmarks.map(repoName => {
-        dispatch(getIssues({ repoName, page }));
-      })
-    );
+      const moreIssuesRepos = bookmarks.filter(
+        bookmark => !endRepos.includes(bookmark)
+      );
 
-    setPage(prevPage => prevPage + 1);
+      await Promise.all(
+        moreIssuesRepos.map(repoName => {
+          dispatch(getIssues({ repoName, page }));
+        })
+      );
 
-    setisBottomLoading(false);
-  };
+      setPage(prevPage => prevPage + 1);
 
-  const renderItem = ({ item }: { item: number }) => {
-    const { full_name, title, html_url, state } = issues[item];
-    let issueStateStyle: any = [styles.issueState];
-
-    if (state === 'closed') {
-      issueStateStyle.push({
-        color: 'rgb(102, 102, 102)',
-        borderColor: 'rgb(102, 102, 102)',
-      });
+      setisBottomLoading(false);
     }
+  }, [bookmarks, endRepos, dispatch, page]);
 
-    return (
-      <>
-        <TouchableOpacity
-          style={styles.resultBox}
-          onPress={() => navigation.navigate('WebPage', { uri: html_url })}>
-          <View style={styles.repoInfo}>
-            <Text style={styles.fullName}>{full_name}</Text>
-            <Text style={issueStateStyle}>{state}</Text>
-          </View>
-          <Text>{title}</Text>
-        </TouchableOpacity>
-      </>
-    );
-  };
+  const renderItem = useCallback(
+    ({ item }: { item: number }) => {
+      const { full_name, title, html_url, state } = issues[item];
+      let issueStateStyle: any = [styles.issueState];
 
-  const keyExtractor = (item: any) => item;
+      if (state === 'closed') {
+        issueStateStyle.push({
+          color: 'rgb(102, 102, 102)',
+          borderColor: 'rgb(102, 102, 102)',
+        });
+      }
+
+      return (
+        <>
+          <TouchableOpacity
+            style={styles.resultBox}
+            onPress={() => navigation.navigate('WebPage', { uri: html_url })}>
+            <View style={styles.repoInfo}>
+              <Text style={styles.fullName}>{full_name}</Text>
+              <Text style={issueStateStyle}>{state}</Text>
+            </View>
+            <Text>{title}</Text>
+          </TouchableOpacity>
+        </>
+      );
+    },
+    [issues, navigation]
+  );
+
+  const keyExtractor = useCallback((item: any) => item, []);
 
   const ItemSeparatorComponent = () => {
     return <View style={styles.divideLine} />;
